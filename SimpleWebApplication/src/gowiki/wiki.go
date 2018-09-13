@@ -30,16 +30,20 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hi there, I love %s!", r.URL.Path[1:])
 }
 
+func viewHandler(w http.ResponseWriter, r *http.Request) {
+	title := r.URL.Path[len("/view/"):]
+	p, _ := loadPage(title)
+	fmt.Fprintf(w, "<h1>%s</h1><div>%s</div>", p.Title, p.Body)
+
+}
+
 func main() {
 	// p1 := &Page{Title: "Page", Body: []byte("This is a simple Page.")}
 	// p1.save()
 	// p2, _ := loadPage("Page")
 	// fmt.Println(string(p2.Body))
 
-	http.HandleFunc("/", handler)
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Fatal(err)
-	} else {
-		fmt.Printf("Listening on port:8080")
-	}
+	// http.HandleFunc("/", handler)
+	http.HandleFunc("/view/", viewHandler)
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
