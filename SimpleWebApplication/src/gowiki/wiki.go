@@ -1,12 +1,15 @@
 package main
+
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
+	"net/http"
 )
 
 type Page struct {
 	Title string
-	Body []byte
+	Body  []byte
 }
 
 func (p *Page) save() error {
@@ -23,9 +26,20 @@ func loadPage(title string) (*Page, error) {
 	return &Page{Title: title, Body: body}, nil
 }
 
+func handler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Hi there, I love %s!", r.URL.Path[1:])
+}
+
 func main() {
-	p1 := &Page{Title: "Page", Body: []byte("This is a simple Page.")}
-	p1.save()
-	p2, _ := loadPage("Page")
-	fmt.Println(string(p2.Body))
+	// p1 := &Page{Title: "Page", Body: []byte("This is a simple Page.")}
+	// p1.save()
+	// p2, _ := loadPage("Page")
+	// fmt.Println(string(p2.Body))
+
+	http.HandleFunc("/", handler)
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		log.Fatal(err)
+	} else {
+		fmt.Printf("Listening on port:8080")
+	}
 }
