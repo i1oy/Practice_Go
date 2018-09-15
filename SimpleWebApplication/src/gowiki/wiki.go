@@ -35,7 +35,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	renderTemplate(w, "templates/view", p)
+	renderTemplate(w, "view", p)
 }
 
 func viewHandler(w http.ResponseWriter, r *http.Request) {
@@ -47,7 +47,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 	// fmt.Fprintf(w, "<h1>%s</h1><div>%s</div>", p.Title, p.Body)
 	// t, _ := template.ParseFiles("/templates/view.html")
 	// t.Execute(w, p)
-	renderTemplate(w, "templates/view", p)
+	renderTemplate(w, "view", p)
 }
 
 func editHandler(w http.ResponseWriter, r *http.Request) {
@@ -58,7 +58,7 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	// t, _ := template.ParseFiles("/templates/edit.html")
 	// t.Execute(w, p)
-	renderTemplate(w, "templates/edit", p)
+	renderTemplate(w, "edit", p)
 }
 
 func saveHandler(w http.ResponseWriter, r *http.Request) {
@@ -74,20 +74,27 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func errorHandler(w http.ResponseWriter, r *http.Request) {
+// func errorHandler(w http.ResponseWriter, r *http.Request) {
 
-}
+// }
+var templates = template.Must(template.ParseFiles("templates/edit.html", "templates/view.html"))
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
-	t, err := template.ParseFiles(tmpl + ".html")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	err = t.Execute(w, p)
+	err := templates.ExecuteTemplate(w, tmpl+".html", p)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+	// fmt.Println(templates)
+
+	// t, err := template.ParseFiles(tmpl + ".html")
+	// if err != nil {
+	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 	return
+	// }
+	// err = t.Execute(w, p)
+	// if err != nil {
+	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+	// }
 }
 
 func main() {

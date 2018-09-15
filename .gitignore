@@ -18,3 +18,5 @@ src/*
 bin/
 pkg/
 
+.vscode/launch.json
+SimpleWebApplication/src/gowiki/wiki
