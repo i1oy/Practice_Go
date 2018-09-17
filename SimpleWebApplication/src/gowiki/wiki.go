@@ -40,29 +40,30 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "view", p)
 }
 
-func viewHandler(w http.ResponseWriter, r *http.Request) {
+func viewHandler(w http.ResponseWriter, r *http.Request, title string) {
 	// title := r.URL.Path[len("/view/"):]
-	title, err := getTitle(w, r)
-	if err != nil {
-		return
-	}
+	// title, err := getTitle(w, r)
+	// if err != nil {
+	// 	return
+	// }
 
 	p, err := loadPage(title)
 	if err != nil {
 		http.Redirect(w, r, "/edit/"+title, http.StatusFound)
+	} else {
+		renderTemplate(w, "view", p)
 	}
 	// fmt.Fprintf(w, "<h1>%s</h1><div>%s</div>", p.Title, p.Body)
 	// t, _ := template.ParseFiles("/templates/view.html")
 	// t.Execute(w, p)
-	renderTemplate(w, "view", p)
 }
 
-func editHandler(w http.ResponseWriter, r *http.Request) {
+func editHandler(w http.ResponseWriter, r *http.Request, title string) {
 	// title := r.URL.Path[len("/edit/"):]
-	title, err := getTitle(w, r)
-	if err != nil {
-		return
-	}
+	// title, err := getTitle(w, r)
+	// if err != nil {
+	// 	return
+	// }
 	p, err := loadPage(title)
 	if err != nil {
 		p = &Page{Title: title}
@@ -72,26 +73,25 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "edit", p)
 }
 
-func saveHandler(w http.ResponseWriter, r *http.Request) {
+func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
 	// title := r.URL.Path[len("/save/"):]
-	title, err := getTitle(w, r)
-	if err != nil {
-		return
-	}
+	// title, err := getTitle(w, r)
+	// if err != nil {
+	// 	return
+	// }
 	body := r.FormValue("body")
 	p := &Page{Title: title, Body: []byte(body)}
-	err = p.save()
+	err := p.save()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	http.Redirect(w, r, "/view/"+title, http.StatusFound)
-
 }
 
 // func errorHandler(w http.ResponseWriter, r *http.Request) {
-
 // }
+
 var templates = template.Must(template.ParseFiles("templates/edit.html", "templates/view.html"))
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
@@ -100,7 +100,6 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	// fmt.Println(templates)
-
 	// t, err := template.ParseFiles(tmpl + ".html")
 	// if err != nil {
 	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -110,6 +109,18 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 	// if err != nil {
 	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
 	// }
+}
+
+func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		m := validPath.FindStringSubmatch(r.URL.Path)
+		if m == nil {
+			http.NotFound(w, r)
+			return
+		}
+
+		fn(w, r, m[2])
+	}
 }
 
 var validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-9]+)$")
@@ -129,9 +140,9 @@ func main() {
 	// p2, _ := loadPage("Page")
 	// fmt.Println(string(p2.Body))
 
-	http.HandleFunc("/view/", viewHandler)
-	http.HandleFunc("/edit/", editHandler)
-	http.HandleFunc("/save/", saveHandler)
+	http.HandleFunc("/view/", makeHandler(viewHandler))
+	http.HandleFunc("/edit/", makeHandler(editHandler))
+	http.HandleFunc("/save/", makeHandler(saveHandler))
 	http.HandleFunc("/", handler)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
